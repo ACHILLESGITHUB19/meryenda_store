@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import jwt from 'jsonwebtoken';
@@ -76,19 +77,9 @@ app.use('/css', express.static(cssDir));
 app.use('/js', express.static(jsDir));
 app.use('/images', express.static(imagesDir));
 
-// Session configuration - UPDATED to 365 days
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'meryenda-store-session-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days in milliseconds
-        httpOnly: true,
-        sameSite: 'lax'
-    },
-    name: 'meryenda.sid'
-}));
+// Session configuration - PLACEHOLDER (will be updated after MongoDB connection)
+// This will be replaced with MongoDB store after connection
+let sessionMiddleware;
 
 // Set EJS as view engine
 app.set('view engine', 'ejs');
@@ -112,6 +103,29 @@ const connectDB = async () => {
         
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
         console.log(`📊 Database: ${conn.connection.name}`);
+        
+        // Initialize session middleware with MongoDB store
+        if (!sessionMiddleware) {
+            sessionMiddleware = session({
+                secret: process.env.SESSION_SECRET || 'meryenda-store-session-secret',
+                resave: false,
+                saveUninitialized: false,
+                store: new MongoStore({
+                    mongoUrl: mongoURI,
+                    touchAfter: 24 * 3600 // Lazy session update (in seconds)
+                }),
+                cookie: { 
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days in milliseconds
+                    httpOnly: true,
+                    sameSite: 'lax'
+                },
+                name: 'meryenda.sid'
+            });
+            
+            app.use(sessionMiddleware);
+            console.log('✅ Session middleware configured with MongoDB store');
+        }
         
         await createDefaultAdmin();
         
