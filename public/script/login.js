@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('username', username);
                 formData.append('password', password);
                 
-                const response = await fetch('/login', {
+                const response = await fetch('/api/login', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -90,34 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                if (response.redirected) {
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
                     // Successful login - redirect to dashboard
                     showSuccessMessage('Login successful! Redirecting...');
                     setTimeout(() => {
-                        window.location.href = response.url;
+                        window.location.href = '/';
                     }, 500);
                 } else {
-                    // Check if response is JSON
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const data = await response.json();
-                        if (data.error) {
-                            showClientError(data.error);
-                        } else {
-                            showClientError('Login failed. Please try again.');
-                        }
-                    } else {
-                        // Handle HTML response (login page with error)
-                        const html = await response.text();
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const errorDiv = doc.getElementById('serverErrorMessage');
-                        if (errorDiv && errorDiv.textContent) {
-                            showClientError(errorDiv.textContent);
-                        } else {
-                            showClientError('Invalid username or password');
-                        }
-                    }
+                    // Handle error response
+                    showClientError(data.error || 'Login failed. Please try again.');
                     setLoadingState(false);
                 }
             } catch (error) {

@@ -17,10 +17,10 @@ dotenv.config();
 // Try to load bcrypt first (for desktop), fallback to bcryptjs (for mobile)
 let bcrypt;
 try {
-    bcrypt = await import('bcrypt');
+    bcrypt = (await import('bcrypt')).default;
     console.log('✅ Using bcrypt (native) for better performance');
 } catch (error) {
-    bcrypt = await import('bcryptjs');
+    bcrypt = (await import('bcryptjs')).default;
     console.log('✅ Using bcryptjs (pure JS) for compatibility');
 }
 
@@ -719,9 +719,14 @@ app.get('/api/health', (req, res) => {
             host: mongoose.connection.host || 'not connected',
             name: mongoose.connection.name || 'not connected'
         },
-        bcryptType: bcrypt.default ? 'bcrypt' : 'bcryptjs',
+        bcryptType: bcrypt ? 'bcryptjs or bcrypt' : 'unknown',
         environment: process.env.NODE_ENV || 'development'
     });
+});
+
+// Favicon route to prevent 404 errors
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end(); // No content
 });
 
 
