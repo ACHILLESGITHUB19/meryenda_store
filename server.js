@@ -387,7 +387,7 @@ const requireRole = (roles) => {
 
 // ============== ROUTES ==============
 
-// Home/Dashboard route - serves staffdashboard.ejs
+// Home/Dashboard route - serves staffdashboard.ejs (default for all roles)
 app.get('/', requireAuth, async (req, res) => {
     try {
         // Get user data if needed for future enhancements
@@ -406,6 +406,75 @@ app.get('/', requireAuth, async (req, res) => {
         // Even on error, render the dashboard without user data
         res.render('staffdashboard', {
             title: 'Meryenda Store',
+            user: null,
+            session: req.session,
+            currentYear: new Date().getFullYear(),
+            error: 'Error loading dashboard'
+        });
+    }
+});
+
+// Admin Dashboard
+app.get('/dashboard/admin', requireAuth, requireRole(['admin']), async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId).select('-password -refreshToken').lean();
+        res.render('staffdashboard', {
+            title: 'Admin Dashboard - Meryenda Store',
+            user: user,
+            session: req.session,
+            currentYear: new Date().getFullYear(),
+            error: null
+        });
+    } catch (error) {
+        console.error('Error loading admin dashboard:', error);
+        res.render('staffdashboard', {
+            title: 'Admin Dashboard - Meryenda Store',
+            user: null,
+            session: req.session,
+            currentYear: new Date().getFullYear(),
+            error: 'Error loading dashboard'
+        });
+    }
+});
+
+// Manager Dashboard
+app.get('/dashboard/manager', requireAuth, requireRole(['admin', 'manager']), async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId).select('-password -refreshToken').lean();
+        res.render('staffdashboard', {
+            title: 'Manager Dashboard - Meryenda Store',
+            user: user,
+            session: req.session,
+            currentYear: new Date().getFullYear(),
+            error: null
+        });
+    } catch (error) {
+        console.error('Error loading manager dashboard:', error);
+        res.render('staffdashboard', {
+            title: 'Manager Dashboard - Meryenda Store',
+            user: null,
+            session: req.session,
+            currentYear: new Date().getFullYear(),
+            error: 'Error loading dashboard'
+        });
+    }
+});
+
+// Cashier Dashboard
+app.get('/dashboard/cashier', requireAuth, requireRole(['admin', 'cashier']), async (req, res) => {
+    try {
+        const user = await User.findById(req.session.userId).select('-password -refreshToken').lean();
+        res.render('staffdashboard', {
+            title: 'Cashier Dashboard - Meryenda Store',
+            user: user,
+            session: req.session,
+            currentYear: new Date().getFullYear(),
+            error: null
+        });
+    } catch (error) {
+        console.error('Error loading cashier dashboard:', error);
+        res.render('staffdashboard', {
+            title: 'Cashier Dashboard - Meryenda Store',
             user: null,
             session: req.session,
             currentYear: new Date().getFullYear(),

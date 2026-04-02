@@ -93,10 +93,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    // Successful login - redirect to dashboard
+                    // Successful login - redirect based on role
                     showSuccessMessage('Login successful! Redirecting...');
+                    
+                    // Store user data for role-based routing
+                    const userRole = data.user?.role || 'staff';
+                    
+                    // Define role-based routes
+                    const roleRoutes = {
+                        'admin': '/dashboard/admin',
+                        'manager': '/dashboard/manager',
+                        'cashier': '/dashboard/cashier',
+                        'staff': '/'  // Default to main dashboard
+                    };
+                    
+                    const redirectUrl = roleRoutes[userRole] || '/';
+                    
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = redirectUrl;
                     }, 500);
                 } else {
                     // Handle error response
